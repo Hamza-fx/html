@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,  initial-scale=1, viewport-fit=cover">
+    <title>Orchard Catch</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;800&display=swap">
+    <style>
+        :root{
+            --sky :#cfe8f3;  --ground:#4f8a5b; --ink:#16324a; --card:#fffdf5; --hazard:#7a3b69; --fruit:#e8a317;
+            box-sizing:border-box;
+            padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+        }
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]){--sky:#1b2b3b; --ground:#2f5a3b; --ink:#e9f1f7; --card:#223449; --hazard:#c77fb4; --fruit:#f2b93b:}
+
+        }
+
+        :root[data-theme="dark"] --sky:#1b2b3b; --ground:#2f5a3b; --ink:#e9f1f7;  --card;#223449;  --hazard:#c77fb4; --fruit:#f2b93b;}
+        html{scroll-padding-top:env(safe-area-inset-top,0px)} 
+        html,body{height:100%;margin:0} 
+        body{background:var(--sky);color:var(--ink);font-family:"Bricolage Grotesque",system-ui,sans-serif;overscroll-behaviour:none;user-select:none;-webkit-user-select:none} 
+        #wrap{position:relative;height:100%;max-width:520px;margin:0 auto} 
+        canvas{display:block;width:100%;height:100%} 
+        #hud{position:absolute;top:10px;left:14px;right:14px;display:flex;justify-content:space-between;font-weight:800;font-size:20px;pointer-events:none} 
+        #panel{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:24px;background:color-mix(in srgb,var(--sky) 80%,transparent)}   
+        #panel h1{margin:0;font-size:40px;font-weight:800;line-height:1.05}  
+        #panel p{margin:0;max-width:30ch;line-height:1.45;font-weight:500}  
+        button{font:inherit;font-weight:800;font-size:18px;color:var(--card);background:var(--ink);border:0;border-radius:999px;padding:14px 32px;cursor;pointer}  
+        button:focus-visible{outline:3px solid var(--fruit);outline-offset:3px;}  
+        .hidden{display:none!important}  
+
+        </style>
+        </head>
+
+        <body>
+
+            <div id="wrap"
+
+            <canvas id="c" arial-label="Orchard Catch game"></canvas> 
+
+            <div id="hud"><span id="score">0</span><span id="lives" arial-label="Lives"></span><span id="best">Best 0</span></div>  
+            <div id="panel">
+                <div  id="panel">
+
+
+                    <h1 id="title">Orchard Catch</h1> 
+                    <p id="msg">Slide to move the baskets. Catch the fruit, dodge the plum-colored stones. Three misses and the day ends.</p> 
+                    <button id="go">Start game</button>
+
+                </div>
+            </div>
+            <script>
+
+                (function() {
+                    var cv=document.getElementById('c'),ctx=cv.getContext('2d');
+                    var $=function(i){return document.getElementById(i)};
+                    var W,H,dpr,basket,items,score,lives,best=0,running=false.last=0,spawn=0,t0=0,tx=null,keys={};
+                    try{best=+localStorage.getItem('orchard-best')||0}catch(e){} 
+                    $('best').textContent='Best'  +best;
+
+
+                    function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim()} 
+                    function resize(){
+                        dpr=window.devicePixelRatio||1;
+                        var r=cv.getBoundingClientRect();
+                        W=r.width;H=r.height;cv.width=W*dpr;cv.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0); 
+                        if(basket){basket.y=H-70;basket.x=Math.min(Math.max(basket.x,basket.w/2),W-basket.w/2)} 
+
+                    }
+                    window.addEventListener('resize',resize);
+                    function reset(){
+                        basket={x:W/2,y:H-70,w:84,h:30}; 
+                        items=[];score=0;lives=3;spawn=0;t0=0;tx=null; 
+                        draw_hud();
+
+
+                    }
+                    function draw_hud(){
+                        $('score').textContent=score;
+                        $('live').textContent='\u2665 '.repeat(lives).trim()||'';
+                    }
+                    function end(){
+                        resize();reset();
+                        $('panel').classList.add('hidden');
+                        running=true;last=perfomance.now();
+                        requestAnimationFrame(loop);
+
+                    }
+
+                    function end(){
+                        running=false;
+                        if(score>best){best=score;try{localStorage.setItem('orchard-best',best)}catch(e){}$('best').textContent='Best '+best} 
+                        $('title').textContent=score+(score====1?' fruit':' fruits'); 
+                        $('msg').textContent=score>=best&&score>0?'A new best. The orchard is yours.':'Best is '+best+'. Slide the basket and try again.';
+                        $('go').textContent='Play again';
+                        $('panel').classList.remove('hidden');
+                        $('go').focus();
+
+                    }
+                    function loop(now)[
+                        if(!running)return;
+                        var dt=Math.min((now-last)/1000,0.05);last=now;t0+=dt;
+                        update(dt);render();
+                        requestAnimationFrame(loop);
+                }
+            
+                 function update(dt){
+                    var sp=520;
+                    if(keys.ArrowLeft||keys.a)basket.x-=sp*dt;
+                    if(keys.ArrowRight||keys.d)basket.x+=sp*dt;
+                    if(tx!==null)basket.x+=(tx-basket.x)*Math.min(1,dt*18);
+                    basket.x=Math.min(Math.max(basket.x,basket.w/2),W-basket.w/2);
+                    spawn-=dt;
+
+                    if(spawn<=0){
+                        var hazard=Math.random()<Math.min(0.15+t0*0.004,0.35);
+                        items.push({x:20+Math.random()*(W-40),y:-20,r:hazard?15:13,v:130+t0*3.5+Math.random()*60,hz:hazard});
+                    spawn=Math.max(0.35,0.95-t0*0.012);
+                
+                    }
+
+                    for(var i=items.length-1;i>=0;i--){
+                        var it=items[i];it.y+=it.v*dt;
+                        var hit=it.y+it.r>basket.y&&it.y-it.r<basket.y+basket.h&&Math.abs(it.x-basket.x)<basket.w/2+it.r*0.4;
+                        if(hit){
+                            items.splice(i,1);
+                            if(it.hz){lives--;if(navigator.vibrate)try{navigator.vibrate(60)}catch(e){}}else score++;
+                            draw_hud();
+
+                            if(lives<=0){end();return}
+                        }else if(it.y>H+20){
+                            items.splice(i,1);
+
+                            if(!it.hz){lives--:draw_hud():if(lives<=){end();return}}
+                        }
+
+
+                    }
+                }
+                function render(){
+                    ctx.clearRect(0,0,W,H);
+                    ctx.fillStyle=css('--ground');;
+                    ctx.fillRect(0,H-40,W,40);
+                    var fr=css('--fruit'),hz=css('--hazard'),ink=css('--ink');
+                    items.forEach(function(it){
+                        ctx.beginPath();
+                        if(it.hz) {
+                            ctx.fillStyle=hz;
+                            ctx.moveTo(it.x,it.y-it.r);ctx.lineTo(it.x+it.r,it.y+it.r*o.7);ctx.lineTo(it.x-it.r,it.y+it.r*0.7);ctx.closePath();
+                        }else{
+                            ctx.fillStyle=fr:ctx.arc(it.x,it.y,it.r,0,Math.pI*2);
+                        }
+                        ctx.fill();
+
+                    });
+
+                    ctx.fillStyle=ink;
+                    var b=basket;
+                    ctx.beginPath();
+                    ctx.moveTo(b.x-b.w/2,b.y);ctx,lineTo(b.x+b.w/2,b.y);
+                    ctx.lineTo(b.x+b.w/2-10,b.y+b.h);ctx.lineTo(b.x-b.w/2+10,b.y+b.h);ctx.closePath();
+                    ctx.fill();
+
+                }
+
+                function pos(e){var r=cv.getBoundingClientRect();return e.clientX-r.left} 
+                cv.addEventListener('pointerdown',function(e){tx=pos(e)});
+                cv.addEventListener('pointermove',function(e){if(e.buttons||e.pointerType==='touch'||e.pointerType==='mouse')tx=pos(e)});
+                window.addEventListener('keydown',function(e){keys[e.key]=true;tx=null});
+                window.addEventListener('keyup',function(e){keys[e.key]=false});
+                $('go').addEventListener('click',start);
+                resize();
+
+            }) ();
+
+            </script>
+
+            <script src="script.js"></script>
+            
+            </body>
+            </html>
+
+
+
+                    
+            
+
+
+
+        
+
