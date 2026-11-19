@@ -1,0 +1,146 @@
+l!DOCTYPE html> 
+
+<html lang="en">
+
+<head> 
+     
+    <meta charset="UTF-8"> 
+    <meta name="viewport" content="width=device-width, initial-scale=1"> 
+
+    <title>Open a personal account</title> 
+
+    <style> 
+
+    :root{--bg:#f3f6f4,--card:#fff;--ink:#16302b;--muted:#5d726c;--line:#cdd9d4;--accent:#--err:#b3261e} 
+    @media (prefers-color-scheme:dark){:root{--bg:#0f1a17;--card:#172521;--ink:#e6f0ec;--muted:#9bb2aa;--line:#2c423c;--accent:#4fc3a4;--err:#ff8a80}} 
+    *{box-sizing:border-box} 
+    body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Georgia,"Times New Roman",sefif;padding:24px 16px} 
+    main{max-width:560px;margin:0 auto} 
+    h1{font-size:1.8rem;margin:0 0 4px} 
+    p.sub{color:var(--muted);margin:0 0 24px;font-family:system-ui,sans-serif;font-size:.95rem} 
+    fieldset{border:1px solid var(--line);border-radius:6px;padding:16px;margin:0 0 20px;background:var(--card)} 
+     legend{padding:0 8px;font-weight:bold} 
+    label{display:block;margin-top:12px;font:.9rem system-ui,sans-serif;color:var(--muted)} 
+    input,select{width:100%;margin-top:4px;padding:10px;border:1px  solid var(--line);border-radius:4px;font:1rem system-ui,sans-serif;background:transparent;color:var(--ink)} 
+   input:focus,select:focus,button:focus-visible{outline:2px solid var(--accent);outline-offset:1px} 
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px} 
+.check{display:flex;gap:8px;align-items:flex-start;margin-top:14px} 
+.check input{width:auto;margin-top:4px} 
+.err{color:var(--err);font:.85rem system-ui,sans-serif;min-height:1.1em} 
+button{width:100%;padding:14px;border:0;border-radius:4px;background:var(--accent);color:#fff;font:bold 1rem system-ui,sans-serif;cursor:pointer} 
+#done{display:none;padding:20px;border:1px solid var(--accent);border-radius:6px;background:var(--card)} 
+
+</style> 
+</head> 
+<body>
+
+    <main> 
+        <h1>Open a personal account</h1> 
+        <p class="sub">Takes about five minutes. You must be 18 or older.</p> 
+
+        <form id="f" novalidate> 
+            <fieldset> 
+
+                <legend>About you</legend>
+                <div class="row"> 
+
+                    <label>First name<input name="first" required autocomplete="given-name"></label> 
+                    <label>Last name<input name="last" required autocomplete="family-name"></label>
+
+                </div>
+
+                <label>Date of birth<input type="date" name="dob" required></label> 
+                <label>Email<input type="email" name="email" required autocomplete="email"></label> 
+                <label>Phone<input type="tel" name="phone" required autocomplete="tel"></label> 
+
+            </fieldset>
+
+            <fieldset>
+                <legend>Home address</legend> 
+                <label>Street address<input name="street" required autocomplete="street-address"></label>
+                <div class="row"> 
+
+                    <label>City<input name="city" required></label> 
+                    <label>Postal code<input name="zip" required></label> 
+
+                </div> 
+
+            </fieldset> 
+
+            <fieldset> 
+                <legend>Identity</legend> 
+                <label>ID type
+
+                    <select name="idtype" required> 
+                        <option value="">Choose one</option> 
+                        <option>Passport</option> 
+                        <option>Driver's licence</option> 
+                        <option>National ID card</option> 
+
+                    </select> 
+                </label> 
+
+                <label>ID number<input name="idnum" required></label> 
+            </fieldset> 
+
+            <fieldset> 
+
+                <legend>Account</legend> 
+                <label>Account type
+                    <select name="acct" required> 
+                        <option value="">Choose one</option> 
+                        <option>Checking</option> 
+                        <option>Savings</option> 
+
+                    </select> 
+
+                </label> 
+
+                <label>Opening deposit (optional)<input type="number" name="deposit" min="0" step="0.01"></label> 
+                <label>Create a password (8+ characters)<input type="password" name="pw"  minlength="8" required autocomplete="new-password"></label> 
+                <div class="check"><input type="checkbox"  id="terms" required><label for="terms" style="margin:0">I agree to the terms and confirm my details are correct.</label></div> 
+            </fieldset> 
+
+
+            <div class="err" id="msg" role="alert"></div> 
+            <button type="submit">Open account</button>  
+
+        </form> 
+
+        <div id="done" role="status"></div> 
+    </main> 
+
+    <scripts>
+
+    const f = document.getElementById("f"), msg = document.getElementById("msg"); 
+    f.addEventListener("submit", e => { 
+        e.preventDefault(); 
+        msg.textContent = ""; 
+
+        if (!.checkValidity()) { 
+            f.reportValidity(); 
+
+            msg.textContent = "Fill in the highlighted fields to continue.";  
+            return; 
+
+        } 
+
+        const d = Object . fromEntries(new FormData(f)); 
+        const age = (Date.now() - new Date(d.dob))  /  31557600000; 
+        if (age < 18) { msg.textContent = "You must be 18  or older to open an account."; return; } 
+        delete d.pw; // never keep passwords client-side 
+        // TODO: send 'd' to your secure server  (HTTPS) here 
+        f.style.display = "none";
+        const done = document.getElementById("done"); 
+         done.style.display = "block"; 
+
+         done.textContent = "Thanks, " +  d.first + ". Your " + d.acct.toLowerCase() + " account application is received. We'll email " + d.email + " within one  business day.";
+
+
+        
+         
+    }); 
+
+</script> 
+</body> addEventListener
+</html>
